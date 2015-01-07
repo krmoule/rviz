@@ -41,6 +41,7 @@ qt4_wrap_cpp(MOC_FILES
   view_controllers/xy_orbit_view_controller.h
   view_controllers/fixed_orientation_ortho_view_controller.h
   view_controllers/fps_view_controller.h
+  view_controllers/christie_view_controller.h
   wrench_display.h
 )
 
@@ -103,6 +104,7 @@ set(SOURCE_FILES
   view_controllers/xy_orbit_view_controller.cpp
   view_controllers/fixed_orientation_ortho_view_controller.cpp
   view_controllers/fps_view_controller.cpp
+  view_controllers/christie_view_controller.cpp
   wrench_display.cpp
   wrench_visual.cpp
   ${MOC_FILES}

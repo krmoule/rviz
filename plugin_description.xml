@@ -263,5 +263,10 @@
       Orthographic projection, seen from the top.
     </description>
   </class>
+  <class name="rviz/Christie" type="rviz::ChristieViewController" base_class_type="rviz::ViewController">
+    <description>
+	Christie viewing parameters to interface with AutoCal.
+    </description>
+  </class>
 
 </library>
