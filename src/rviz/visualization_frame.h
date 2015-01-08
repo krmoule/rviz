@@ -274,6 +274,11 @@ protected:
 
   RenderPanel* render_panel_;
 
+  // the full screen windows and associated render panels
+  // that drive the multi projector display
+  std::vector<QWidget*> autocal_windows_;
+  std::vector<RenderPanel*> autocal_render_panels_;
+
   QAction* show_help_action_;
 
   std::string config_dir_;

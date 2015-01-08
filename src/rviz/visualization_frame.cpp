@@ -47,6 +47,7 @@
 #include <QLabel>
 #include <QToolButton>
 #include <QHBoxLayout>
+#include <QDesktopWidget>
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -164,6 +165,8 @@ VisualizationFrame::~VisualizationFrame()
   }
 
   delete panel_factory_;
+
+  // TODO: clean up all the autocal_XXX
 }
 
 void VisualizationFrame::setStatus( const QString & message )
@@ -263,6 +266,34 @@ void VisualizationFrame::initialize(const QString& display_config_file )
 
   render_panel_ = new RenderPanel( central_widget );
 
+  // Create a number of additional top level windows here,
+  // each with a full screen render panel. The numbers of
+  // windows and associated displays needs to be coordinated
+  // with the AutoCal setup
+  const int NUM_AUTOCAL_WINDOWS = 2;
+  for( int i = 0; i < NUM_AUTOCAL_WINDOWS; i++ )
+  {
+    QWidget* window = new QWidget;
+    RenderPanel* render_panel = new RenderPanel( window );
+
+    QHBoxLayout* layout = new QHBoxLayout;
+    layout->setSpacing(0);
+    layout->setMargin(0);
+    layout->addWidget( render_panel );
+    window->setLayout( layout );
+
+    window->show();
+
+    // TODO: Enumerate the screens in some programmatic fashion
+    // to have each appear full screen on individual monitors
+    window->move( 1920, 0 );
+    window->resize( 1000, 600 );
+    window->showFullScreen();
+
+    autocal_windows_.push_back( window );
+    autocal_render_panels_.push_back( render_panel );
+  }
+
   hide_left_dock_button_ = new QToolButton();
   hide_left_dock_button_->setContentsMargins(0,0,0,0);
   hide_left_dock_button_->setArrowType( Qt::LeftArrow );
@@ -299,6 +330,29 @@ void VisualizationFrame::initialize(const QString& display_config_file )
   manager_->setHelpPath( help_path_ );
 
   render_panel_->initialize( manager_->getSceneManager(), manager_ );
+
+  // Now initialize each of the AutoCal render panels with the
+  // same parameters so that whatever gets show in the rviz UI
+  // will be see on the AutoCal windows
+  for( int i = 0; i < (int)autocal_render_panels_.size(); i++ )
+  {
+    RenderPanel* rp = autocal_render_panels_[i];
+
+    rp->initialize( manager_->getSceneManager(), manager_ );
+
+    // TODO: Fetch the "Christie" view controllers from the view manager
+    // and assign one to each of the render panels. This allows the
+    // AutoCal viewing parameters to be controlled at runtime
+    {
+      //Ogre::Camera* cam2 = manager_->getSceneManager()->createCamera( "2nd Static Window" );
+      //cam2->setNearClipDistance(0.01f);
+      //cam2->setPosition(0, 0, 25);
+      //cam2->lookAt(0, 0, 0);
+      //Ogre::Matrix4 mat4 = goAutoCalToOgreProjectionMatrix( -13, 33, 14, -13 );
+      //cam2->setCustomProjectionMatrix( true, mat4 );
+      //render_panel_2_->setCamera( cam2 );
+    }
+  }
 
   ToolManager* tool_man = manager_->getToolManager();
 
