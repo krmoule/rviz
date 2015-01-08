@@ -162,6 +162,9 @@ public Q_SLOTS:
   /** Set the message displayed in the status bar */
   virtual void setStatus( const QString & message );
 
+  // This is called when the AutoCal render panels need to be updated to reflect a config change
+  void updateAutoCalRenderPanels();
+
 Q_SIGNALS:
   /** @brief Emitted during file-loading and initialization to indicate progress. */
   void statusUpdate( const QString& message );

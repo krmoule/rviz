@@ -80,6 +80,7 @@
 #include "rviz/tool_manager.h"
 #include "rviz/tool_properties_panel.h"
 #include "rviz/views_panel.h"
+#include "rviz/view_manager.h"
 #include "rviz/visualization_manager.h"
 #include "rviz/widget_geometry_change_detector.h"
 #include "rviz/load_resource.h"
@@ -286,9 +287,9 @@ void VisualizationFrame::initialize(const QString& display_config_file )
 
     // TODO: Enumerate the screens in some programmatic fashion
     // to have each appear full screen on individual monitors
-    window->move( 1920, 0 );
-    window->resize( 1000, 600 );
-    window->showFullScreen();
+    window->move( 1200, 200 + i * 300 );
+    window->resize( 200, 200 );
+    //window->showFullScreen();
 
     autocal_windows_.push_back( window );
     autocal_render_panels_.push_back( render_panel );
@@ -339,19 +340,6 @@ void VisualizationFrame::initialize(const QString& display_config_file )
     RenderPanel* rp = autocal_render_panels_[i];
 
     rp->initialize( manager_->getSceneManager(), manager_ );
-
-    // TODO: Fetch the "Christie" view controllers from the view manager
-    // and assign one to each of the render panels. This allows the
-    // AutoCal viewing parameters to be controlled at runtime
-    {
-      //Ogre::Camera* cam2 = manager_->getSceneManager()->createCamera( "2nd Static Window" );
-      //cam2->setNearClipDistance(0.01f);
-      //cam2->setPosition(0, 0, 25);
-      //cam2->lookAt(0, 0, 0);
-      //Ogre::Matrix4 mat4 = goAutoCalToOgreProjectionMatrix( -13, 33, 14, -13 );
-      //cam2->setCustomProjectionMatrix( true, mat4 );
-      //render_panel_2_->setCamera( cam2 );
-    }
   }
 
   ToolManager* tool_man = manager_->getToolManager();
@@ -381,6 +369,31 @@ void VisualizationFrame::initialize(const QString& display_config_file )
 
   connect( manager_, SIGNAL( preUpdate() ), this, SLOT( updateFps() ) );
   connect( manager_, SIGNAL( statusUpdate( const QString& )), this, SIGNAL( statusUpdate( const QString& )));
+
+  // Now that a config file has been loaded, attempt to extract any
+  // defined 'CH[1-9]' view controllers and assigned them to the appropriate
+  // render panels
+  for( int i = 0; i < (int)autocal_render_panels_.size(); i++ )
+  {
+    RenderPanel* rp = autocal_render_panels_[i];
+
+    int numViews = manager_->getViewManager()->getNumViews();
+    for( int j = 0; j < numViews; j++ )
+    {
+      ViewController* vc = manager_->getViewManager()->getViewAt( j );
+      if( vc->getName() == QString( "CH%1" ).arg( i+1 ) )
+      {
+        // NOTE: this update is used to force an internal setup of the
+        // camera class, otherwise the ogre camera is never realized based
+        // on the view controller's data
+        vc->update( 0.0, 0.0 );
+
+        rp->setCamera( vc->getCamera() );
+        break;
+      }
+    }
+  }
+  connect( manager_->getViewManager(), SIGNAL( configChanged() ), this, SLOT( updateAutoCalRenderPanels() ) );
 }
 
 void VisualizationFrame::initConfigs()
@@ -1246,6 +1259,29 @@ PanelDockWidget* VisualizationFrame::addPane( const QString& name, QWidget* pane
   hideRightDock( area == Qt::RightDockWidgetArea ? false : hide_right_dock_button_->isChecked() );
 
   return dock;
+}
+
+void VisualizationFrame::updateAutoCalRenderPanels()
+{
+  // The render panels aren't actually changed explicitly, we simply
+  // rifle through the view manager and 'update' the various 'CHX' view
+  // controller, triggering a camera update on the next render pass.
+  for( int i = 0; i < (int)autocal_render_panels_.size(); i++ )
+  {
+    int numViews = manager_->getViewManager()->getNumViews();
+    for( int j = 0; j < numViews; j++ )
+    {
+      ViewController* vc = manager_->getViewManager()->getViewAt( j );
+      if( vc->getName() == QString( "CH%1" ).arg( i+1 ) )
+      {
+	// NOTE: this update is used to force an internal setup of the
+	// camera class, otherwise the ogre camera is never realized based
+	// on the view controller's data
+	vc->update( 0.0, 0.0 );
+	break;
+      }
+    }
+  }
 }
 
 } // end namespace rviz
