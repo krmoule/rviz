@@ -125,8 +125,10 @@ void ChristieViewController::update( float dt, float ros_dt )
 
 	camera_->setPosition( x, y, z );
 
-	// TODO: this need to be replaced with a matrix built from yaw/pitch/roll
-	camera_->lookAt( 0, 0, 0 );
+	Ogre::Quaternion yawQ( Ogre::Degree(-yaw), Ogre::Vector3::UNIT_Y );
+	Ogre::Quaternion pitchQ( Ogre::Degree(pitch), Ogre::Vector3::UNIT_X );
+	Ogre::Quaternion rollQ( Ogre::Degree(-roll), Ogre::Vector3::UNIT_Z );
+	camera_->setOrientation( yawQ * pitchQ * rollQ );
 
 	float near = camera_->getNearClipDistance();
 	float far = camera_->getFarClipDistance();
