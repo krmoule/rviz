@@ -285,11 +285,23 @@ void VisualizationFrame::initialize(const QString& display_config_file )
 
     window->show();
 
-    // TODO: Enumerate the screens in some programmatic fashion
-    // to have each appear full screen on individual monitors
-    window->move( 1200, 200 + i * 300 );
-    window->resize( 200, 200 );
-    //window->showFullScreen();
+    // We treat screen '0' as the primary monitor for displaying the
+    // main rviz UI and other bits. We then map all the desired AutoCal
+    // windows to any additional monitors found. If there are any
+    // additional windows they are shown on screen '0' in a small column
+    int screenCount = QApplication::desktop()->screenCount();
+    if( (i+1) < screenCount )
+    {
+      QRect screenRect = QApplication::desktop()->screenGeometry( i+1 );
+      window->move( screenRect.x() + 5, screenRect.y() + 5 );
+      window->resize( screenRect.width() - 10, screenRect.height() - 10 );
+      window->showFullScreen();
+    }
+    else
+    {
+      window->move( 1200, 200 + i * 300 );
+      window->resize( 200, 200 );
+    }
 
     autocal_windows_.push_back( window );
     autocal_render_panels_.push_back( render_panel );
@@ -1274,11 +1286,11 @@ void VisualizationFrame::updateAutoCalRenderPanels()
       ViewController* vc = manager_->getViewManager()->getViewAt( j );
       if( vc->getName() == QString( "CH%1" ).arg( i+1 ) )
       {
-	// NOTE: this update is used to force an internal setup of the
-	// camera class, otherwise the ogre camera is never realized based
-	// on the view controller's data
-	vc->update( 0.0, 0.0 );
-	break;
+        // NOTE: this update is used to force an internal setup of the
+        // camera class, otherwise the ogre camera is never realized based
+        // on the view controller's data
+        vc->update( 0.0, 0.0 );
+        break;
       }
     }
   }
